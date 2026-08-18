@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Bell, Search, User, Calendar, CheckCircle2, Clock, X } from 'lucide-react';
 import { getApplications } from '../services/api';
+import { AuthContext } from '../context/AuthContext';
 
 const Topbar = () => {
+  const { user } = useContext(AuthContext);
   const [isOpen, setIsOpen] = useState(false);
   const [notificationsList, setNotificationsList] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -126,13 +128,11 @@ const Topbar = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center p-[2px]">
-            <div className="w-full h-full bg-background rounded-full flex items-center justify-center">
-              <User size={18} className="text-gray-300" />
-            </div>
+          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-primary-cyan flex items-center justify-center text-xs font-bold text-white shadow-sm border border-white/10">
+            {user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
           </div>
           <div className="hidden sm:block">
-            <p className="text-sm font-medium text-white">Kashish Porwal</p>
+            <p className="text-sm font-medium text-white">{user?.name || 'Logged User'}</p>
             <p className="text-xs text-gray-400">Job Seeker</p>
           </div>
         </div>
