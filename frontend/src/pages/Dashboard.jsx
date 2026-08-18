@@ -16,7 +16,7 @@ import {
   useSortable 
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, Trash2, Calendar } from 'lucide-react';
+import { Plus, Trash2, Calendar, Sparkles } from 'lucide-react';
 import { getApplications, updateApplicationStatus, deleteApplication } from '../services/api';
 import NewAppModal from '../components/NewAppModal';
 import TaskDetailModal from '../components/TaskDetailModal';
@@ -156,7 +156,7 @@ const TaskCardContent = ({ task, onDelete, onSelect }) => {
             {task.platform}
           </span>
 
-          {task.interviewDate && (
+          {(task.status === 'Interview_R1' || task.status === 'Interview_R2') && task.interviewDate && (
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/40 flex items-center gap-1 animate-pulse">
               📅 {new Date(task.interviewDate).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </span>
@@ -368,7 +368,7 @@ const Dashboard = () => {
 
       return [
         ...currentTasks.slice(0, activeIndex),
-        { ...taskToMove, status: targetStatus },
+        { ...taskToMove, status: targetStatus, interviewDate: null },
         ...currentTasks.slice(activeIndex + 1)
       ];
     });
@@ -383,18 +383,43 @@ const Dashboard = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-white mb-2">Application Tracker</h1>
-          <p className="text-gray-400 text-sm">Track and manage your job applications.</p>
+          <h1 className="text-3xl font-heading font-bold text-white mb-2 flex items-center gap-2">
+            Application Tracker
+          </h1>
+          <p className="text-gray-400 text-sm">Track and manage your job applications through interactive stages.</p>
         </div>
         <button 
           onClick={() => setIsNewModalOpen(true)}
-          className="bg-gradient-to-r from-primary to-primary-cyan text-white px-6 py-2.5 rounded-full font-medium hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2"
+          className="bg-gradient-to-r from-primary to-primary-cyan text-white px-6 py-2.5 rounded-full font-medium hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 text-sm"
         >
           <Plus size={18} /> New Application
         </button>
       </div>
+
+      {/* Storyteller Narrative Banner */}
+      <motion.div 
+        initial={{ opacity: 0, y: -10, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary-cyan/10 border border-white/10 backdrop-blur-md flex items-center justify-between shadow-[0_0_25px_rgba(6,182,212,0.12)]"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary-cyan/20 flex items-center justify-center text-primary-cyan border border-primary-cyan/30 animate-pulse">
+            <Sparkles size={20} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xs font-bold text-white tracking-wider uppercase">Career Storyline Narrative</h3>
+              <span className="px-2 py-0.5 text-[9px] uppercase tracking-wider font-extrabold rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Active Journey</span>
+            </div>
+            <p className="text-xs text-gray-300 mt-0.5">
+              Current progress: <strong className="text-primary-cyan">{tasks.length} Applications Active</strong> • <span className="text-purple-300 font-semibold">{tasks.filter(t => t?.status?.startsWith('Interview')).length} Scheduled Interviews</span> • <span className="text-green-400 font-semibold">{tasks.filter(t => t?.status === 'Offer').length} Job Offers</span>
+            </p>
+          </div>
+        </div>
+      </motion.div>
 
       <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar">
         {loading ? (
