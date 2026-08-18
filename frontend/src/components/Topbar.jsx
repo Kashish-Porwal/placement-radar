@@ -19,40 +19,64 @@ const Topbar = () => {
       const reminders = [];
       const now = new Date();
 
-      apps.forEach(app => {
-        // 1. Upcoming Interview Reminders
-        if (app.interviewDate) {
-          const intDate = new Date(app.interviewDate);
-          const diffHours = (intDate - now) / (1000 * 60 * 60);
+      if (!apps || apps.length === 0) {
+        // Helpful demo notification if no applications exist
+        reminders.push({
+          id: 'demo-welcome',
+          type: 'info',
+          title: '👋 Welcome to Placement Radar Notifications!',
+          message: 'Add job applications or schedule interviews to receive real-time alerts here.',
+          time: 'Just now',
+          urgent: false
+        });
+      } else {
+        apps.forEach(app => {
+          // 1. Scheduled Interview Alerts
+          if (app.interviewDate) {
+            const intDate = new Date(app.interviewDate);
+            const diffHours = (intDate - now) / (1000 * 60 * 60);
 
-          if (diffHours > 0 && diffHours <= 48) {
-            reminders.push({
-              id: `int-${app._id}`,
-              type: 'interview',
-              title: `🔔 Upcoming Interview (${app.company})`,
-              message: `${app.role} interview scheduled for ${intDate.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
-              time: diffHours < 24 ? 'Within 24 Hours!' : 'Tomorrow',
-              urgent: diffHours <= 24
-            });
+            if (diffHours >= -24 && diffHours <= 168) { // Up to 7 days in future or today
+              reminders.push({
+                id: `int-${app._id}`,
+                type: 'interview',
+                title: `🔔 Interview Scheduled (${app.company})`,
+                message: `${app.role} interview scheduled for ${intDate.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+                time: diffHours < 0 ? 'Today / Active' : diffHours <= 24 ? 'Within 24 Hours!' : `${Math.ceil(diffHours / 24)} days away`,
+                urgent: diffHours <= 24
+              });
+            }
           }
-        }
 
-        // 2. Follow-Up Reminders (Applied > 5 days)
-        if (app.status === 'Applied' && app.appliedDate) {
-          const appliedDate = new Date(app.appliedDate);
-          const diffDays = Math.floor((now - appliedDate) / (1000 * 60 * 60 * 24));
-          if (diffDays >= 5) {
+          // 2. Offer Received Celebration Alert
+          if (app.status === 'Offer') {
             reminders.push({
-              id: `fol-${app._id}`,
-              type: 'followup',
-              title: `📌 Follow-up Recommended (${app.company})`,
-              message: `It has been ${diffDays} days since you applied. Consider sending a follow-up email.`,
-              time: `${diffDays} days ago`,
+              id: `off-${app._id}`,
+              type: 'offer',
+              title: `🥳 Job Offer Received! (${app.company})`,
+              message: `Congratulations! You received an offer for the ${app.role} position.`,
+              time: 'Active Offer',
               urgent: false
             });
           }
-        }
-      });
+
+          // 3. Follow-Up Reminders (Applied > 2 days)
+          if (app.status === 'Applied' || app.status === 'OA') {
+            const createdDate = new Date(app.createdAt || Date.now());
+            const diffDays = Math.floor((now - createdDate) / (1000 * 60 * 60 * 24));
+            if (diffDays >= 2) {
+              reminders.push({
+                id: `fol-${app._id}`,
+                type: 'followup',
+                title: `📌 Follow-up Recommended (${app.company})`,
+                message: `Applied ${diffDays} days ago for ${app.role}. Consider sending a follow-up email to the recruiter.`,
+                time: `${diffDays} days ago`,
+                urgent: false
+              });
+            }
+          }
+        });
+      }
 
       setNotificationsList(reminders);
       setUnreadCount(reminders.length);
