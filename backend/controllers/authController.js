@@ -76,9 +76,44 @@ const getUserProfile = async (req, res) => {
       name: user.name,
       email: user.email,
       isTwoFactorEnabled: user.isTwoFactorEnabled || false,
+      notificationPreferences: user.notificationPreferences || { emailAlerts: true, interviewReminders: true, weeklyDigest: true },
     });
   } else {
     res.status(404).json({ message: 'User not found' });
+  }
+};
+
+// @desc    Update user profile (Name & Notification preferences)
+// @route   PUT /api/auth/profile
+// @access  Private
+const updateUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (req.body.name) user.name = req.body.name;
+    if (req.body.notificationPreferences) {
+      user.notificationPreferences = {
+        ...user.notificationPreferences,
+        ...req.body.notificationPreferences
+      };
+    }
+
+    const updatedUser = await user.save();
+
+    res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      isTwoFactorEnabled: updatedUser.isTwoFactorEnabled || false,
+      notificationPreferences: updatedUser.notificationPreferences,
+      token: generateToken(updatedUser._id)
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -135,6 +170,7 @@ module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
+  updateUserProfile,
   changePassword,
   toggleTwoFactor,
 };

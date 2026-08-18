@@ -18,6 +18,11 @@ const userSchema = new mongoose.Schema({
   isTwoFactorEnabled: {
     type: Boolean,
     default: false,
+  },
+  notificationPreferences: {
+    emailAlerts: { type: Boolean, default: true },
+    interviewReminders: { type: Boolean, default: true },
+    weeklyDigest: { type: Boolean, default: true },
   }
 }, {
   timestamps: true

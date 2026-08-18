@@ -7,12 +7,28 @@ const Resumes = () => {
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [parsedData, setParsedData] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
   const fileInputRef = useRef(null);
+
+  const validateResumeFile = (selectedFile) => {
+    if (!selectedFile) return false;
+    const name = selectedFile.name.toLowerCase();
+    const isPdfOrDoc = name.endsWith('.pdf') || name.endsWith('.doc') || name.endsWith('.docx');
+    
+    if (!isPdfOrDoc) {
+      setErrorMsg('⚠️ Invalid file format! Please upload ONLY PDF (.pdf) or Word (.doc / .docx) resume files.');
+      setFile(null);
+      return false;
+    }
+
+    setErrorMsg(null);
+    return true;
+  };
 
   const handleDrop = (e) => {
     e.preventDefault();
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && (droppedFile.type === 'application/pdf' || droppedFile.name.endsWith('.docx'))) {
+    if (validateResumeFile(droppedFile)) {
       setFile(droppedFile);
       setSuccess(false);
       setParsedData(null);
@@ -21,7 +37,7 @@ const Resumes = () => {
 
   const handleSelect = (e) => {
     const selectedFile = e.target.files[0];
-    if (selectedFile) {
+    if (validateResumeFile(selectedFile)) {
       setFile(selectedFile);
       setSuccess(false);
       setParsedData(null);
@@ -48,10 +64,17 @@ const Resumes = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-3xl font-heading font-bold text-white mb-2">Resume Hub</h1>
         <p className="text-gray-400 text-sm">Upload your base resume here. The AI will use it to tailor applications.</p>
       </div>
+
+      {errorMsg && (
+        <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-semibold flex items-center justify-between shadow-[0_0_20px_rgba(239,68,68,0.2)] animate-pulse">
+          <span>{errorMsg}</span>
+          <button onClick={() => setErrorMsg(null)} className="text-xs bg-red-500/20 px-2.5 py-1 rounded-lg border border-red-500/40 hover:bg-red-500/40 text-white">Dismiss</button>
+        </div>
+      )}
 
       <div className="flex-1 flex items-center justify-center">
         <div 

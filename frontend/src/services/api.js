@@ -64,6 +64,11 @@ export const tailorResume = async (applicationId) => {
   return response.data;
 };
 
+export const updateProfile = async (profileData) => {
+  const response = await api.put('/auth/profile', profileData);
+  return response.data;
+};
+
 export const changePassword = async (currentPassword, newPassword) => {
   const response = await api.post('/auth/change-password', { currentPassword, newPassword });
   return response.data;

@@ -2,10 +2,10 @@ import { useState, useContext, useEffect } from 'react';
 import { Save, User, Bell, Shield, CheckCircle2, LogOut, KeyRound, Smartphone, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { changePassword, toggleTwoFactor } from '../services/api';
+import { changePassword, toggleTwoFactor, updateProfile } from '../services/api';
 
 const SecuritySettings = () => {
-  const { logout } = useContext(AuthContext);
+  const { user, updateUser, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [passData, setPassData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -13,9 +13,15 @@ const SecuritySettings = () => {
   const [passMessage, setPassMessage] = useState(null);
   const [passError, setPassError] = useState(null);
 
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(user?.isTwoFactorEnabled || false);
   const [twoFactorLoading, setTwoFactorLoading] = useState(false);
   const [twoFactorMsg, setTwoFactorMsg] = useState(null);
+
+  useEffect(() => {
+    if (user) {
+      setTwoFactorEnabled(user.isTwoFactorEnabled || false);
+    }
+  }, [user]);
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
@@ -50,10 +56,10 @@ const SecuritySettings = () => {
     try {
       const res = await toggleTwoFactor();
       setTwoFactorEnabled(res.isTwoFactorEnabled);
+      updateUser({ isTwoFactorEnabled: res.isTwoFactorEnabled });
       setTwoFactorMsg(res.message);
     } catch (err) {
       console.error(err);
-      setTwoFactorEnabled(!twoFactorEnabled);
     } finally {
       setTwoFactorLoading(false);
     }
@@ -170,29 +176,56 @@ const SecuritySettings = () => {
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('profile');
-  const { user } = useContext(AuthContext);
+  const { user, updateUser } = useContext(AuthContext);
 
-  const [notifications, setNotifications] = useState(() => {
-    const saved = localStorage.getItem('notificationPreferences');
-    return saved ? JSON.parse(saved) : {
-      emailAlerts: true,
-      interviewReminders: true,
-      weeklyDigest: true,
-    };
+  const [nameState, setNameState] = useState(user?.name || '');
+  const [notifications, setNotifications] = useState({
+    emailAlerts: true,
+    interviewReminders: true,
+    weeklyDigest: true,
   });
 
+  const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
+
+  useEffect(() => {
+    if (user) {
+      setNameState(user.name || '');
+      if (user.notificationPreferences) {
+        setNotifications(user.notificationPreferences);
+      }
+    }
+  }, [user]);
 
   const handleNotificationChange = (key, value) => {
-    const updated = { ...notifications, [key]: value };
-    setNotifications(updated);
-    localStorage.setItem('notificationPreferences', JSON.stringify(updated));
+    setNotifications(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = () => {
-    localStorage.setItem('notificationPreferences', JSON.stringify(notifications));
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+  const handleSave = async () => {
+    setSaving(true);
+    setSavedSuccess(false);
+    setErrorMsg(null);
+
+    try {
+      const updatedData = await updateProfile({
+        name: nameState,
+        notificationPreferences: notifications
+      });
+
+      updateUser({
+        name: updatedData.name,
+        notificationPreferences: updatedData.notificationPreferences
+      });
+
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.response?.data?.message || 'Failed to update settings');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -207,19 +240,19 @@ const Settings = () => {
         <div className="w-full md:w-64 space-y-2">
           <button 
             onClick={() => setActiveTab('profile')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'profile' ? 'bg-primary/20 text-primary-cyan border border-primary/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'profile' ? 'bg-primary/20 text-primary-cyan border border-primary/30 font-semibold' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
           >
             <User size={18} /> Profile
           </button>
           <button 
             onClick={() => setActiveTab('notifications')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'notifications' ? 'bg-primary/20 text-primary-cyan border border-primary/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'notifications' ? 'bg-primary/20 text-primary-cyan border border-primary/30 font-semibold' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
           >
             <Bell size={18} /> Notifications
           </button>
           <button 
             onClick={() => setActiveTab('security')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'security' ? 'bg-primary/20 text-primary-cyan border border-primary/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'security' ? 'bg-primary/20 text-primary-cyan border border-primary/30 font-semibold' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
           >
             <Shield size={18} /> Security
           </button>
@@ -231,18 +264,29 @@ const Settings = () => {
             <div className="space-y-6">
               <h2 className="text-xl font-bold border-b border-white/10 pb-4 text-white">Profile Information</h2>
               <div className="flex items-center gap-6 mb-6">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-2xl font-bold text-white">
-                  {user?.name ? user.name.split(' ').map(n => n[0]).join('') : 'KP'}
+                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-primary to-primary-cyan flex items-center justify-center text-2xl font-bold text-white shadow-md border border-white/10">
+                  {nameState ? nameState.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-400">Full Name</label>
-                  <input type="text" defaultValue={user?.name || 'Kashish Porwal'} className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
+                  <label className="text-sm text-gray-400 font-medium block">Full Name</label>
+                  <input 
+                    type="text" 
+                    value={nameState} 
+                    onChange={(e) => setNameState(e.target.value)}
+                    placeholder="Enter your full name"
+                    className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white focus:border-primary-cyan focus:ring-1 focus:ring-primary-cyan outline-none transition-all text-sm" 
+                  />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-400">Email Address</label>
-                  <input type="email" defaultValue={user?.email || 'kashishporwal1702@gmail.com'} className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-gray-400 outline-none cursor-not-allowed" disabled />
+                  <label className="text-sm text-gray-400 font-medium block">Email Address</label>
+                  <input 
+                    type="email" 
+                    value={user?.email || ''} 
+                    className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-gray-400 outline-none cursor-not-allowed text-sm" 
+                    disabled 
+                  />
                 </div>
               </div>
             </div>
@@ -293,20 +337,27 @@ const Settings = () => {
             <SecuritySettings />
           )}
 
-          <div className="mt-8 pt-6 border-t border-white/10 flex justify-between items-center">
-            {savedSuccess ? (
-              <span className="text-xs text-green-400 font-semibold flex items-center gap-1.5 bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20">
-                <CheckCircle2 size={16} /> Notification preferences saved!
-              </span>
-            ) : <div />}
+          {activeTab !== 'security' && (
+            <div className="mt-8 pt-6 border-t border-white/10 flex justify-between items-center">
+              {savedSuccess ? (
+                <span className="text-xs text-green-400 font-semibold flex items-center gap-1.5 bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20">
+                  <CheckCircle2 size={16} /> Profile & Settings saved to database!
+                </span>
+              ) : errorMsg ? (
+                <span className="text-xs text-red-400 font-semibold flex items-center gap-1.5 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20">
+                  <AlertTriangle size={16} /> {errorMsg}
+                </span>
+              ) : <div />}
 
-            <button 
-              onClick={handleSave}
-              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-primary to-primary-cyan text-white rounded-full font-medium hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all"
-            >
-              <Save size={18} /> Save Changes
-            </button>
-          </div>
+              <button 
+                onClick={handleSave}
+                disabled={saving}
+                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-primary to-primary-cyan text-white rounded-full font-medium hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] disabled:opacity-50 transition-all text-xs md:text-sm"
+              >
+                <Save size={18} /> {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
