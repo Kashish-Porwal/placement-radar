@@ -20,42 +20,65 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="w-64 h-screen glass border-r border-white/10 hidden md:flex flex-col justify-between">
-      <div>
-        <div className="p-6 flex items-center gap-3">
-          <Target className="text-primary-cyan" size={28} />
-          <h1 className="text-xl font-heading font-bold text-gradient">Radar</h1>
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="w-64 h-screen glass border-r border-white/10 hidden md:flex flex-col justify-between">
+        <div>
+          <div className="p-6 flex items-center gap-3">
+            <Target className="text-primary-cyan" size={28} />
+            <h1 className="text-xl font-heading font-bold text-gradient">Radar</h1>
+          </div>
+          <nav className="px-4 py-6 space-y-2">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+                    isActive
+                      ? 'bg-gradient-to-r from-primary/20 to-primary-cyan/20 text-white shadow-[0_0_15px_rgba(59,130,246,0.15)] border border-primary/20'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`
+                }
+              >
+                {item.icon}
+                <span className="font-medium">{item.name}</span>
+              </NavLink>
+            ))}
+          </nav>
         </div>
-        <nav className="px-4 py-6 space-y-2">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.name}
-              to={item.path}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
-                  isActive
-                    ? 'bg-gradient-to-r from-primary/20 to-primary-cyan/20 text-white shadow-[0_0_15px_rgba(59,130,246,0.15)] border border-primary/20'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`
-              }
-            >
-              {item.icon}
-              <span className="font-medium">{item.name}</span>
-            </NavLink>
-          ))}
-        </nav>
-      </div>
 
-      <div className="p-4 border-t border-white/10">
-        <button 
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all font-medium"
-        >
-          <LogOut size={20} />
-          <span>Logout</span>
-        </button>
-      </div>
-    </aside>
+        <div className="p-4 border-t border-white/10">
+          <button 
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all font-medium"
+          >
+            <LogOut size={20} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0e17]/90 backdrop-blur-xl border-t border-white/10 px-4 py-2 flex justify-around items-center shadow-[0_-10px_25px_rgba(0,0,0,0.5)]">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.name}
+            to={item.path}
+            className={({ isActive }) =>
+              `flex flex-col items-center gap-1 p-2 rounded-xl text-[10px] font-semibold transition-all ${
+                isActive
+                  ? 'text-primary-cyan font-bold scale-110 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]'
+                  : 'text-gray-400 hover:text-white'
+              }`
+            }
+          >
+            {item.icon}
+            <span>{item.name}</span>
+          </NavLink>
+        ))}
+      </nav>
+    </>
   );
 };
 

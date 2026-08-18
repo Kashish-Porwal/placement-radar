@@ -18,7 +18,7 @@ const Layout = () => {
           <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] -z-10 pointer-events-none mix-blend-screen opacity-50" />
           <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-primary-light/20 rounded-full blur-[120px] -z-10 pointer-events-none mix-blend-screen opacity-50" />
           
-          <div className="p-8 h-full">
+          <div className="p-4 md:p-8 pb-24 md:pb-8 h-full">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}

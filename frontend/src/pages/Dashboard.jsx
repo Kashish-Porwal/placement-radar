@@ -381,18 +381,20 @@ const Dashboard = () => {
     }
   };
 
+  const [mobileFilter, setMobileFilter] = useState('ALL');
+
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center mb-6">
+    <div className="h-full flex flex-col pb-6 md:pb-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 md:mb-6">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-white mb-2 flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-heading font-bold text-white mb-1 md:mb-2 flex items-center gap-2">
             Application Tracker
           </h1>
-          <p className="text-gray-400 text-sm">Track and manage your job applications through interactive stages.</p>
+          <p className="text-gray-400 text-xs md:text-sm">Track and manage your job applications through interactive stages.</p>
         </div>
         <button 
           onClick={() => setIsNewModalOpen(true)}
-          className="bg-gradient-to-r from-primary to-primary-cyan text-white px-6 py-2.5 rounded-full font-medium hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 text-sm"
+          className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary-cyan text-white px-5 py-2.5 rounded-full font-medium hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 text-xs md:text-sm"
         >
           <Plus size={18} /> New Application
         </button>
@@ -403,23 +405,45 @@ const Dashboard = () => {
         initial={{ opacity: 0, y: -10, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary-cyan/10 border border-white/10 backdrop-blur-md flex items-center justify-between shadow-[0_0_25px_rgba(6,182,212,0.12)]"
+        className="mb-4 md:mb-6 p-3 md:p-4 rounded-2xl bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary-cyan/10 border border-white/10 backdrop-blur-md flex items-center justify-between shadow-[0_0_25px_rgba(6,182,212,0.12)]"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary-cyan/20 flex items-center justify-center text-primary-cyan border border-primary-cyan/30 animate-pulse">
-            <Sparkles size={20} />
+          <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-primary-cyan/20 flex items-center justify-center text-primary-cyan border border-primary-cyan/30 animate-pulse flex-shrink-0">
+            <Sparkles size={18} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-xs font-bold text-white tracking-wider uppercase">Career Storyline Narrative</h3>
-              <span className="px-2 py-0.5 text-[9px] uppercase tracking-wider font-extrabold rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Active Journey</span>
+              <h3 className="text-[10px] md:text-xs font-bold text-white tracking-wider uppercase">Career Storyline</h3>
+              <span className="px-2 py-0.5 text-[8px] md:text-[9px] uppercase tracking-wider font-extrabold rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Active</span>
             </div>
-            <p className="text-xs text-gray-300 mt-0.5">
-              Current progress: <strong className="text-primary-cyan">{tasks.length} Applications Active</strong> • <span className="text-purple-300 font-semibold">{tasks.filter(t => t?.status?.startsWith('Interview')).length} Scheduled Interviews</span> • <span className="text-green-400 font-semibold">{tasks.filter(t => t?.status === 'Offer').length} Job Offers</span>
+            <p className="text-[11px] md:text-xs text-gray-300 mt-0.5">
+              <strong className="text-primary-cyan">{tasks.length} Active</strong> • <span className="text-purple-300 font-semibold">{tasks.filter(t => t?.status?.startsWith('Interview')).length} Interviews</span> • <span className="text-green-400 font-semibold">{tasks.filter(t => t?.status === 'Offer').length} Offers</span>
             </p>
           </div>
         </div>
       </motion.div>
+
+      {/* Mobile Stage Filter Tabs (Visible on small screens) */}
+      <div className="flex md:hidden overflow-x-auto gap-2 pb-3 mb-2 custom-scrollbar">
+        <button
+          onClick={() => setMobileFilter('ALL')}
+          className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${mobileFilter === 'ALL' ? 'bg-primary-cyan text-black font-bold shadow-[0_0_12px_rgba(6,182,212,0.4)]' : 'bg-white/5 text-gray-400 border border-white/10'}`}
+        >
+          All Columns ({initialColumns.length})
+        </button>
+        {initialColumns.map(col => {
+          const count = tasks.filter(t => t && t.status === col.id).length;
+          return (
+            <button
+              key={col.id}
+              onClick={() => setMobileFilter(col.id)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${mobileFilter === col.id ? 'bg-primary-cyan text-black font-bold shadow-[0_0_12px_rgba(6,182,212,0.4)]' : 'bg-white/5 text-gray-400 border border-white/10'}`}
+            >
+              {col.title} ({count})
+            </button>
+          );
+        })}
+      </div>
 
       <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar">
         {loading ? (
@@ -433,16 +457,19 @@ const Dashboard = () => {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="flex gap-6 h-full items-start">
-              {initialColumns.map(col => (
-                <Column 
-                  key={col.id} 
-                  column={col} 
-                  tasks={tasks.filter(t => t && t.status === col.id)} 
-                  onDelete={handleAppDelete}
-                  onSelect={setSelectedTask}
-                />
-              ))}
+            <div className="flex gap-4 md:gap-6 h-full items-start snap-x snap-mandatory md:snap-none">
+              {initialColumns
+                .filter(col => mobileFilter === 'ALL' || mobileFilter === col.id)
+                .map(col => (
+                  <div key={col.id} className="snap-center w-[85vw] sm:w-80 md:w-auto flex-shrink-0 md:flex-shrink">
+                    <Column 
+                      column={col} 
+                      tasks={tasks.filter(t => t && t.status === col.id)} 
+                      onDelete={handleAppDelete}
+                      onSelect={setSelectedTask}
+                    />
+                  </div>
+                ))}
             </div>
 
             <DragOverlay>

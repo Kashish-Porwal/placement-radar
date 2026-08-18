@@ -60,26 +60,26 @@ const Topbar = () => {
   };
 
   return (
-    <header className="h-20 border-b border-white/10 glass flex items-center justify-between px-8 sticky top-0 z-30">
-      <div className="relative w-96">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+    <header className="h-16 md:h-20 border-b border-white/10 glass flex items-center justify-between px-4 md:px-8 sticky top-0 z-30">
+      <div className="relative w-full max-w-[180px] sm:max-w-xs md:w-96">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
         <input
           type="text"
-          placeholder="Search applications, roles, companies..."
-          className="w-full bg-white/5 border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all text-white placeholder-gray-500"
+          placeholder="Search..."
+          className="w-full bg-white/5 border border-white/10 rounded-full py-1.5 md:py-2 pl-9 md:pl-10 pr-3 text-xs md:text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all text-white placeholder-gray-500"
         />
       </div>
 
-      <div className="flex items-center gap-6 relative">
+      <div className="flex items-center gap-3 sm:gap-6 relative">
         {/* Notification Bell Icon */}
         <div className="relative">
           <button 
             onClick={() => setIsOpen(!isOpen)}
-            className="relative p-2.5 text-gray-300 hover:text-white hover:bg-white/5 rounded-full transition-all"
+            className="relative p-2 text-gray-300 hover:text-white hover:bg-white/5 rounded-full transition-all"
           >
-            <Bell size={20} />
+            <Bell size={18} />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 w-5 h-5 bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold text-[10px] rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(239,68,68,0.6)] animate-pulse">
+              <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold text-[9px] rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(239,68,68,0.6)] animate-pulse">
                 {unreadCount}
               </span>
             )}
@@ -87,7 +87,7 @@ const Topbar = () => {
 
           {/* Dropdown Notification Center */}
           {isOpen && (
-            <div className="absolute right-0 mt-3 w-96 glass rounded-2xl border border-white/10 shadow-2xl bg-[#0c121e]/95 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute right-[-60px] sm:right-0 mt-3 w-[calc(100vw-40px)] sm:w-96 glass rounded-2xl border border-white/10 shadow-2xl bg-[#0c121e]/95 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex justify-between items-center border-b border-white/10 pb-3 mb-3">
                 <div className="flex items-center gap-2">
                   <Bell size={18} className="text-primary-cyan" />
