@@ -1,0 +1,9 @@
+node_modules
+.env
+.env.local
+dist
+build
+uploads/*.pdf
+uploads/*.docx
+.DS_Store
+*.log
