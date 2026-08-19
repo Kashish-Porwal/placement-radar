@@ -62,6 +62,10 @@ const updateApplication = async (req, res) => {
       });
     }
 
+    if (req.body.interviewDate) {
+      req.body.interviewReminderSent = false;
+    }
+
     const updatedApplication = await Application.findByIdAndUpdate(
       req.params.id,
       { 
